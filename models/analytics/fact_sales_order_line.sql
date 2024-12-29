@@ -1,6 +1,38 @@
+WITH fact_sales_order_line__source AS (
+  SELECT * 
+  FROM `vit-lam-data.wide_world_importers.sales__order_lines`
+)
 
-SELECT 
-order_line_id AS sales_order_line_key
+, fact_sales_order_line__rename_and_cast AS(
+  SELECT 
+    CAST(order_line_id AS INTEGER) AS sales_order_line_key
+  , CAST (order_id AS INTEGER) AS sales_order_key
+  , CAST(quantity AS INTEGER) AS quantity
+  , CAST(unit_price AS NUMERIC) AS unit_price
+  , CAST(stock_item_id AS INTEGER) AS product_key
+  FROM fact_sales_order_line__source
+)
+
+, fact_sales_order_line__count_gross_amount AS(
+  SELECT *
+  , quantity * unit_price AS  gross_amount
+  FROM fact_sales_order_line__rename_and_cast
+)
+
+, fact_sales_order_line__add_customer AS (
+  SELECT sl.*
+  , s.customer_key
+  FROM fact_sales_order_line__count_gross_amount sl
+  JOIN `vit-lam-data2024.wide_world_importers_dwh_staging.stg_fact_sales_order` s
+  ON s.sales_order_key = sl.sales_order_key
+)
+
+SELECT sales_order_line_key
+, sales_order_key
+, product_key
+, customer_key
 , quantity
 , unit_price
-FROM `vit-lam-data.wide_world_importers.sales__order_lines`
+, gross_amount
+FROM fact_sales_order_line__add_customer
+
