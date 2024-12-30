@@ -20,11 +20,11 @@ WITH fact_sales_order_line__source AS (
 )
 
 , fact_sales_order_line__add_customer AS (
-  SELECT sl.*
-  , s.customer_key
-  FROM fact_sales_order_line__count_gross_amount sl
-  JOIN `vit-lam-data2024.wide_world_importers_dwh_staging.stg_fact_sales_order` s
-  ON s.sales_order_key = sl.sales_order_key
+  SELECT fact_line.*
+  , fact_header.customer_key
+  FROM fact_sales_order_line__count_gross_amount fact_line
+  LEFT JOIN {{ ref('stg_fact_sales_order')}} fact_header
+  ON fact_header.sales_order_key = fact_line.sales_order_key
 )
 
 SELECT sales_order_line_key
