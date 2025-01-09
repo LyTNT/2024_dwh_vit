@@ -19,9 +19,10 @@ WITH fact_sales_order_line__source AS (
   FROM fact_sales_order_line__rename_and_cast
 )
 
-, fact_sales_order_line__add_customer AS (
+, fact_sales_order_line__add_cols AS (
   SELECT fact_line.*
   , fact_header.customer_key
+  , COALESCE(fact_header.picked_by_person_key, 0) AS picked_by_person_key 
   FROM fact_sales_order_line__count_gross_amount fact_line
   LEFT JOIN {{ ref('stg_fact_sales_order')}} fact_header
   ON fact_header.sales_order_key = fact_line.sales_order_key
@@ -31,8 +32,9 @@ SELECT sales_order_line_key
 , sales_order_key
 , product_key
 , customer_key
+, picked_by_person_key
 , quantity
 , unit_price
 , gross_amount
-FROM fact_sales_order_line__add_customer
+FROM fact_sales_order_line__add_cols
 
